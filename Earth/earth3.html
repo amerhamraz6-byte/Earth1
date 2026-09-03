@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>هشدار زمین | تغییرات اقلیمی</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      /* ===== VARIABLES ===== */
+      :root {
+        --primary: #ff6b35;
+        --primary-dark: #e85d2a;
+        --danger: #ff3333;
+        --warning: #ffaa00;
+        --text: #eef2f6;
+        --text-muted: #9aa5b5;
+        --font-arabic: "Vazirmatn", "Tahoma", sans-serif;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: var(--font-arabic);
+        color: var(--text);
+        line-height: 1.7;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* کانواس سه‌بعدی به عنوان پس‌زمینه */
+      #earthCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -2;
+        display: block;
+        background-color: rgb(10, 10, 40);
+      }
+
+      /* اوورلی تیره برای خوانایی بهتر متن */
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.65);
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      /* دکمه بازگشت */
+      .back-btn {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 107, 53, 0.3);
+        color: var(--text);
+        padding: 12px 28px;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: 0.4s;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .back-btn:hover {
+        border-color: var(--primary);
+        background: rgba(255, 107, 53, 0.2);
+        transform: translateX(-5px);
+        box-shadow: 0 0 25px rgba(255, 107, 53, 0.3);
+      }
+
+      /* ===== MAIN CONTENT ===== */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 100px 2rem 4rem;
+        position: relative;
+        z-index: 2;
+      }
+
+      /* هدر صفحه */
+      .page-header {
+        margin-bottom: 4rem;
+        padding: 2rem;
+        border-bottom: 1px solid rgba(255, 107, 53, 0.3);
+        text-align: center;
+      }
+
+      .page-title {
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        font-weight: 200;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .page-subtitle {
+        font-size: 1.2rem;
+        max-width: 800px;
+        margin: 0 auto;
+        color: var(--text-muted);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .page-title span {
+        color: var(--primary);
+      }
+
+      .section {
+        margin-bottom: 6rem;
+        background: rgba(10, 12, 15, 0.4);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        border: 1px solid rgba(255, 107, 53, 0.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .section-title {
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        margin-bottom: 2rem;
+        position: relative;
+        display: inline-block;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .section-title:after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+        width: 60px;
+        height: 2px;
+        background: var(--primary);
+      }
+
+      /* ===== CARDS ===== */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .stat-card {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        padding: 2rem;
+        border-radius: 16px;
+        text-align: center;
+        border: 1px solid rgba(255, 107, 53, 0.2);
+        transition: 0.3s;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.2);
+      }
+
+      .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        font-size: 1rem;
+        color: var(--text-muted);
+      }
+
+      .stat-unit {
+        font-size: 0.9rem;
+        color: var(--warning);
+      }
+
+      /* ===== TEMPERATURE CHART ===== */
+      .chart-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .temp-chart {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 1.5rem;
+        border-radius: 16px;
+      }
+
+      .temp-bar {
+        margin: 1.5rem 0;
+      }
+
+      .temp-bar-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .bar-bg {
+        height: 30px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--warning), var(--danger));
+        width: 0%;
+        border-radius: 15px;
+        transition: width 1s ease;
+      }
+
+      /* ===== DATA VIZ ===== */
+      .data-viz {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin: 2rem 0;
+      }
+
+      .viz-card {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 107, 53, 0.15);
+      }
+
+      .viz-title {
+        font-size: 1.3rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* ===== FACTS ===== */
+      .facts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .fact-card {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        padding: 1.8rem;
+        border-radius: 16px;
+        border-right: 3px solid var(--primary);
+        transition: 0.3s;
+      }
+
+      .fact-card:hover {
+        background: rgba(20, 25, 35, 0.7);
+        transform: translateX(-5px);
+      }
+
+      .fact-icon {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+      }
+
+      .fact-title {
+        font-size: 1.2rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .fact-text {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      /* ===== SOLUTIONS SECTION ===== */
+      .solutions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .solution-item {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 1.8rem;
+        border-radius: 16px;
+        text-align: center;
+        transition: 0.3s;
+      }
+
+      .solution-item:hover {
+        background: rgba(255, 107, 53, 0.15);
+        transform: translateY(-5px);
+      }
+
+      .solution-icon {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+      }
+
+      .solution-title {
+        font-size: 1.2rem;
+        margin-bottom: 0.8rem;
+      }
+
+      /* ===== FOOTER ===== */
+      .footer {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(12px);
+        padding: 3rem 2rem;
+        text-align: center;
+        border-top: 1px solid rgba(255, 107, 53, 0.2);
+        position: relative;
+        z-index: 2;
+        margin-top: 4rem;
+      }
+
+      .footer-logo {
+        font-size: 1.8rem;
+        font-weight: 200;
+        margin-bottom: 1rem;
+        letter-spacing: 4px;
+      }
+
+      .footer-logo span {
+        color: var(--primary);
+      }
+
+      .footer-text {
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+      }
+
+      /* ===== ANIMATIONS ===== */
+      .fade-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: 0.8s;
+      }
+
+      .fade-up.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .chart-container {
+          grid-template-columns: 1fr;
+        }
+        .data-viz {
+          grid-template-columns: 1fr;
+        }
+        .section {
+          padding: 1.5rem;
+        }
+        .back-btn {
+          top: 20px;
+          right: 20px;
+          padding: 8px 16px;
+          font-size: 0.8rem;
+        }
+      }
+
+      /* Alert banner */
+      .alert-banner {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 107, 53, 0.2),
+          rgba(255, 51, 51, 0.1)
+        );
+        border: 1px solid var(--danger);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .alert-banner i {
+        color: var(--danger);
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="earthCanvas"></canvas>
+    <div class="overlay"></div>
+
+    <a href="Earth.html" class="back-btn">
+      <i class="fa-solid fa-arrow-right"></i> بازگشت به صفحه اصلی
+    </a>
+
+    <main class="container">
+      <!-- هدر صفحه -->
+      <div class="page-header">
+        <h1 class="page-title"><span>🌡️ هشدار!</span> تغییرات اقلیمی</h1>
+        <p class="page-subtitle">
+          زمین در حال گرم شدن است. هر دقیقه، 11 هکتار جنگل نابود می‌شود و 30
+          زمین فوتبال یخ ذوب می‌گردد.
+        </p>
+      </div>
+
+      <!-- آمار هشدار -->
+      <div class="alert-banner fade-up">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <strong>وضعیت قرمز:</strong> سال 2024 گرم‌ترین سال تاریخ ثبت شده بود |
+        زمان باقی‌مانده تا رسیدن به نقطه بی‌بازگشت: کمتر از 7 سال
+      </div>
+
+      <!-- آمار سریع -->
+      <section class="section fade-up">
+        <h2 class="section-title">آمار هشداردهنده</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">1.2°C</div>
+            <div class="stat-label">افزایش دمای جهانی</div>
+            <div class="stat-unit">نسبت به دوران پیش‌صنعتی</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">21</div>
+            <div class="stat-label">سانتی‌متر</div>
+            <div class="stat-unit">افزایش سطح آب دریاها (1993-2024)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">420</div>
+            <div class="stat-label">ppm</div>
+            <div class="stat-unit">دی اکسید کربن در جو</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">11</div>
+            <div class="stat-label">هکتار در دقیقه</div>
+            <div class="stat-unit">نرخ تخریب جنگل‌ها</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- نمودار دما -->
+      <section class="section fade-up">
+        <h2 class="section-title">📈 گرمایش زمین در 140 سال اخیر</h2>
+        <div class="chart-container">
+          <div class="temp-chart">
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>۱۸۸۰</span>
+                <span>-0.2°C</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>۱۹۵۰</span>
+                <span>0.1°C</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: 15%"></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>۱۹۸۰</span>
+                <span>0.4°C</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: 35%"></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>۲۰۰۰</span>
+                <span>0.7°C</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: 60%"></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>۲۰۲۴</span>
+                <span>1.2°C</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: 100%"></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>۲۱۰۰ (پیش‌بینی)</span>
+                <span class="stat-unit">3.5°C</span>
+              </div>
+              <div class="bar-bg">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 85%;
+                    background: linear-gradient(90deg, #ff6b35, #cc0000);
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p style="margin-bottom: 1rem; color: var(--text-muted)">
+              دمای کره زمین از سال ۱۸۸۰ تاکنون بیش از
+              <strong style="color: var(--danger)">1.2 درجه سانتیگراد</strong>
+              افزایش یافته است. دانشمندان هشدار می‌دهند که اگر افزایش دما از
+              <strong>1.5 درجه</strong> فراتر رود، اثرات جبران‌ناپذیری رخ خواهد
+              داد.
+            </p>
+            <div class="alert-banner" style="margin-top: 1rem">
+              <i class="fa-solid fa-clock"></i>
+              بر اساس آخرین گزارش IPCC، کمتر از <strong>7 سال</strong> تا رسیدن
+              به آستانه 1.5 درجه زمان داریم!
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- داده‌های علمی -->
+      <section class="section fade-up">
+        <h2 class="section-title">📊 تأثیرات تغییرات اقلیمی</h2>
+        <div class="data-viz">
+          <div class="viz-card">
+            <div class="viz-title">
+              <i class="fa-solid fa-water"></i>
+              <span>ذوب یخ‌های قطبی</span>
+            </div>
+            <div class="stat-number" style="font-size: 2rem">432</div>
+            <div class="stat-label">میلیارد تن یخ در سال (گرینلند)</div>
+            <div style="margin-top: 1rem">
+              <div class="bar-bg" style="height: 8px">
+                <div class="bar-fill" style="width: 65%; height: 8px"></div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-top: 0.5rem;
+                  font-size: 0.8rem;
+                "
+              >
+                <span>۱۹۹۲</span>
+                <span>۲۰۲۴</span>
+              </div>
+            </div>
+          </div>
+          <div class="viz-card">
+            <div class="viz-title">
+              <i class="fa-solid fa-fire"></i>
+              <span>آتش‌سوزی جنگل‌ها</span>
+            </div>
+            <div class="stat-number" style="font-size: 2rem">۳ برابر</div>
+            <div class="stat-label">
+              افزایش دفعات آتش‌سوزی نسبت به ۲۰ سال قبل
+            </div>
+            <div style="margin-top: 0.5rem; color: var(--warning)">
+              <i class="fa-solid fa-location-dot"></i> آمازون، استرالیا، سیبری
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- حقایق علمی -->
+      <section class="section fade-up">
+        <h2 class="section-title">⚠️ حقایق تکان‌دهنده</h2>
+        <div class="facts-grid">
+          <div class="fact-card">
+            <div class="fact-icon">
+              <i class="fa-solid fa-temperature-high"></i>
+            </div>
+            <h3 class="fact-title">گرم‌ترین دهه تاریخ</h3>
+            <p class="fact-text">
+              ۹ سال از ۱۰ سال گرم‌ترین تاریخ، مربوط به بعد از سال ۲۰۱۴ هستند.
+              سال ۲۰۲۴ رکورد جدیدی ثبت کرد.
+            </p>
+          </div>
+          <div class="fact-card">
+            <div class="fact-icon">
+              <i class="fa-solid fa-fish"></i>
+            </div>
+            <h3 class="fact-title">مرجان‌ها در خطر</h3>
+            <p class="fact-text">
+              ۷۰٪ از صخره‌های مرجانی جهان تا سال ۲۰۵۰ نابود خواهند شد. دمای
+              اقیانوس‌ها ۰.۵ درجه افزایش یافته است.
+            </p>
+          </div>
+          <div class="fact-card">
+            <div class="fact-icon">
+              <i class="fa-solid fa-droplet"></i>
+            </div>
+            <h3 class="fact-title">کمبود آب شیرین</h3>
+            <p class="fact-text">
+              ۲ میلیارد نفر در حال حاضر به آب آشامیدنی سالم دسترسی ندارند. با
+              ذوب یخچال‌ها، منابع آب شیرین کاهش می‌یابد.
+            </p>
+          </div>
+          <div class="fact-card">
+            <div class="fact-icon">
+              <i class="fa-solid fa-wheat-awn"></i>
+            </div>
+            <h3 class="fact-title">کاهش محصولات کشاورزی</h3>
+            <p class="fact-text">
+              گندم، برنج و ذرت تا ۲۵٪ کاهش تولید خواهند داشت. امنیت غذایی جهانی
+              در معرض خطر است.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- راهکارها -->
+      <section class="section fade-up">
+        <h2 class="section-title">🌱 راهکارهای نجات زمین</h2>
+        <div class="solutions-grid">
+          <div class="solution-item">
+            <div class="solution-icon">
+              <i class="fa-solid fa-solar-panel"></i>
+            </div>
+            <h3 class="solution-title">انرژی تجدیدپذیر</h3>
+            <p class="fact-text">
+              توسعه انرژی خورشیدی، بادی و آبی به جای سوخت‌های فسیلی
+            </p>
+          </div>
+          <div class="solution-item">
+            <div class="solution-icon">
+              <i class="fa-solid fa-tree"></i>
+            </div>
+            <h3 class="solution-title">جنگل‌کاری</h3>
+            <p class="fact-text">
+              کاشت ۱ تریلیون درخت می‌تواند ۱۰ سال از انتشار CO2 بکاهد
+            </p>
+          </div>
+          <div class="solution-item">
+            <div class="solution-icon">
+              <i class="fa-solid fa-recycle"></i>
+            </div>
+            <h3 class="solution-title">کاهش زباله</h3>
+            <p class="fact-text">کاهش مصرف پلاستیک، بازیافت و کمپوست</p>
+          </div>
+          <div class="solution-item">
+            <div class="solution-icon">
+              <i class="fa-solid fa-bicycle"></i>
+            </div>
+            <h3 class="solution-title">حمل و نقل پاک</h3>
+            <p class="fact-text">
+              استفاده از خودروهای برقی، دوچرخه و حمل و نقل عمومی
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CO2 Emissions Chart -->
+      <section class="section fade-up">
+        <h2 class="section-title">🏭 انتشار دی‌اکسید کربن</h2>
+        <div class="chart-container">
+          <div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>چین</span>
+                <span>10,668</span>
+              </div>
+              <div class="bar-bg">
+                <div
+                  class="bar-fill"
+                  style="width: 100%; background: var(--danger)"
+                ></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>ایالات متحده</span>
+                <span>4,853</span>
+              </div>
+              <div class="bar-bg">
+                <div
+                  class="bar-fill"
+                  style="width: 45%; background: var(--warning)"
+                ></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>هند</span>
+                <span>2,693</span>
+              </div>
+              <div class="bar-bg">
+                <div
+                  class="bar-fill"
+                  style="width: 25%; background: var(--warning)"
+                ></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>روسیه</span>
+                <span>1,756</span>
+              </div>
+              <div class="bar-bg">
+                <div
+                  class="bar-fill"
+                  style="width: 16%; background: var(--warning)"
+                ></div>
+              </div>
+            </div>
+            <div class="temp-bar">
+              <div class="temp-bar-label">
+                <span>آلمان</span>
+                <span>673</span>
+              </div>
+              <div class="bar-bg">
+                <div
+                  class="bar-fill"
+                  style="width: 6%; background: #ffaa00"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p style="color: var(--text-muted)">
+              <i class="fa-solid fa-chart-line"></i> واحد: میلیون تن CO₂ در
+              سال<br /><br />
+              <strong style="color: var(--primary)">چین</strong> بزرگترین
+              تولیدکننده CO₂ جهان است، اما سرانه آن از آمریکا کمتر است.<br /><br />
+              برای جلوگیری از فاجعه اقلیمی، تمام کشورها باید انتشار کربن خود را
+              تا سال ۲۰۵۰ به صفر برسانند.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-logo"><span>🌍 CLIMATE</span> ALERT</div>
+      <div class="footer-text">
+        منبع اطلاعات: IPCC 2024 | NASA Climate | World Meteorological
+        Organization
+      </div>
+    </footer>
+
+    <script>
+      // ===== کد Three.js برای زمین سه‌بعدی =====
+      (function () {
+        const canvas = document.getElementById("earthCanvas");
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+          45,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({
+          canvas,
+          antialias: true,
+          alpha: true,
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 3, 5);
+        scene.add(directionalLight);
+
+        const backLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+        backLight.position.set(-3, -1, -4);
+        scene.add(backLight);
+
+        const earthGroup = new THREE.Group();
+        scene.add(earthGroup);
+
+        // ستاره‌ها
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsCount = 5000;
+        const starsPositions = new Float32Array(starsCount * 3);
+        for (let i = 0; i < starsCount * 3; i++) {
+          starsPositions[i] = (Math.random() - 0.5) * 1000;
+        }
+        starsGeometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(starsPositions, 3),
+        );
+        const starsMaterial = new THREE.PointsMaterial({
+          color: 0xffffff,
+          size: 0.7,
+          transparent: true,
+          opacity: 0.8,
+        });
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(stars);
+
+        const textureLoader = new THREE.TextureLoader();
+
+        const earthTexture = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+        );
+        const earthBumpMap = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
+        );
+        const earthSpecularMap = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg",
+        );
+        const cloudsTexture = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_clouds_1024.png",
+        );
+
+        const earthGeometry = new THREE.SphereGeometry(2, 128, 128);
+        const earthMaterial = new THREE.MeshPhongMaterial({
+          map: earthTexture,
+          bumpMap: earthBumpMap,
+          bumpScale: 0.05,
+          specularMap: earthSpecularMap,
+          specular: new THREE.Color(0x333333),
+          shininess: 5,
+        });
+        const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+        earthGroup.add(earthMesh);
+
+        const cloudsGeometry = new THREE.SphereGeometry(2.02, 128, 128);
+        const cloudsMaterial = new THREE.MeshPhongMaterial({
+          map: cloudsTexture,
+          transparent: true,
+          opacity: 0.7,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+        earthGroup.add(cloudsMesh);
+
+        let mouseDown = false;
+        let lastMouseX = 0,
+          lastMouseY = 0;
+        let targetRotationX = 0,
+          targetRotationY = 0;
+        let currentRotationX = 0,
+          currentRotationY = 0;
+        let isRotating = true;
+        let rotationSpeed = 0.5;
+
+        canvas.addEventListener("mousedown", (e) => {
+          mouseDown = true;
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+          if (!mouseDown) return;
+          const deltaX = e.clientX - lastMouseX;
+          const deltaY = e.clientY - lastMouseY;
+          targetRotationY += deltaX * 0.008;
+          targetRotationX += deltaY * 0.008;
+          targetRotationX = Math.max(
+            -Math.PI / 2,
+            Math.min(Math.PI / 2, targetRotationX),
+          );
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+        });
+
+        canvas.addEventListener("mouseup", () => {
+          mouseDown = false;
+        });
+        canvas.addEventListener("mouseleave", () => {
+          mouseDown = false;
+        });
+
+        window.addEventListener("resize", () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function animate() {
+          requestAnimationFrame(animate);
+
+          currentRotationX += (targetRotationX - currentRotationX) * 0.08;
+          currentRotationY += (targetRotationY - currentRotationY) * 0.08;
+
+          if (mouseDown) {
+            earthGroup.rotation.x = currentRotationX;
+            earthGroup.rotation.y = currentRotationY;
+          } else if (isRotating) {
+            earthGroup.rotation.y += 0.002 * rotationSpeed;
+          }
+
+          cloudsMesh.rotation.y += 0.0025 * rotationSpeed * 1.1;
+          stars.rotation.y += 0.0002;
+
+          renderer.render(scene, camera);
+        }
+
+        animate();
+      })();
+
+      // انیمیشن اسکرول
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("active");
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      document
+        .querySelectorAll(
+          ".fade-up, .section, .stat-card, .fact-card, .solution-item, .viz-card",
+        )
+        .forEach((el) => {
+          observer.observe(el);
+        });
+    </script>
+  </body>
+</html>

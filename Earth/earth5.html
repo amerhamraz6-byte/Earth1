@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>در آستانه انقراض | نجات حیات وحش</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      /* ===== VARIABLES ===== */
+      :root {
+        --primary: #e74c3c;
+        --primary-dark: #c0392b;
+        --warning: #f39c12;
+        --danger: #e67e22;
+        --success: #2ecc71;
+        --text: #eef2f6;
+        --text-muted: #9aa5b5;
+        --font-arabic: "Vazirmatn", "Tahoma", sans-serif;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: var(--font-arabic);
+        color: var(--text);
+        line-height: 1.7;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* کانواس سه‌بعدی به عنوان پس‌زمینه */
+      #earthCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -2;
+        display: block;
+        background-color: rgb(10, 10, 40);
+      }
+
+      /* اوورلی تیره برای خوانایی بهتر متن */
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.65);
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      /* دکمه بازگشت */
+      .back-btn {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        color: var(--text);
+        padding: 12px 28px;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: 0.4s;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .back-btn:hover {
+        border-color: var(--primary);
+        background: rgba(231, 76, 60, 0.2);
+        transform: translateX(-5px);
+        box-shadow: 0 0 25px rgba(231, 76, 60, 0.3);
+      }
+
+      /* ===== MAIN CONTENT ===== */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 100px 2rem 4rem;
+        position: relative;
+        z-index: 2;
+      }
+
+      /* هدر صفحه */
+      .page-header {
+        margin-bottom: 4rem;
+        padding: 2rem;
+        border-bottom: 1px solid rgba(231, 76, 60, 0.3);
+        text-align: center;
+      }
+
+      .page-title {
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        font-weight: 200;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .page-subtitle {
+        font-size: 1.2rem;
+        max-width: 800px;
+        margin: 0 auto;
+        color: var(--text-muted);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .page-title span {
+        color: var(--primary);
+      }
+
+      .section {
+        margin-bottom: 5rem;
+        background: rgba(10, 12, 15, 0.4);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        padding: 2.5rem;
+        border: 1px solid rgba(231, 76, 60, 0.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .section-title {
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        margin-bottom: 2rem;
+        position: relative;
+        display: inline-block;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .section-title:after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+        width: 60px;
+        height: 2px;
+        background: var(--primary);
+      }
+
+      /* ===== STATS CARDS ===== */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .stat-card {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        padding: 1.8rem;
+        border-radius: 16px;
+        text-align: center;
+        border: 1px solid rgba(231, 76, 60, 0.2);
+        transition: 0.3s;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      /* ===== SPECIES GRID ===== */
+      .species-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.8rem;
+        margin: 2rem 0;
+      }
+
+      .species-card {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: 0.3s;
+        border: 1px solid rgba(231, 76, 60, 0.15);
+      }
+
+      .species-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary);
+        box-shadow: 0 15px 30px rgba(231, 76, 60, 0.2);
+      }
+
+      .species-header {
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .species-icon {
+        font-size: 3rem;
+      }
+
+      .species-name {
+        font-size: 1.4rem;
+        font-weight: bold;
+      }
+
+      .species-latin {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-style: italic;
+      }
+
+      .species-details {
+        padding: 1.5rem;
+      }
+
+      .species-stat {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .species-stat-label {
+        color: var(--text-muted);
+      }
+
+      .species-stat-value {
+        color: var(--primary);
+        font-weight: bold;
+      }
+
+      .population-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        margin: 0.5rem 0;
+        overflow: hidden;
+      }
+
+      .population-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--warning));
+        width: 0%;
+        border-radius: 4px;
+      }
+
+      .threat-badge {
+        display: inline-block;
+        background: rgba(231, 76, 60, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-top: 0.8rem;
+      }
+
+      /* ===== CATEGORIES ===== */
+      .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .category-card {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        padding: 1.8rem;
+        border-radius: 16px;
+        text-align: center;
+        transition: 0.3s;
+        cursor: pointer;
+      }
+
+      .category-card:hover {
+        background: rgba(231, 76, 60, 0.15);
+        transform: scale(1.02);
+      }
+
+      .category-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .category-name {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .category-count {
+        font-size: 0.8rem;
+        color: var(--primary);
+      }
+
+      /* ===== HELP SECTION ===== */
+      .help-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .help-card {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        padding: 1.8rem;
+        border-radius: 16px;
+        text-align: center;
+        transition: 0.3s;
+      }
+
+      .help-card:hover {
+        transform: translateY(-5px);
+        background: rgba(46, 204, 113, 0.1);
+        border: 1px solid var(--success);
+      }
+
+      .help-icon {
+        font-size: 2.5rem;
+        color: var(--success);
+        margin-bottom: 1rem;
+      }
+
+      .help-title {
+        font-size: 1.2rem;
+        margin-bottom: 0.8rem;
+      }
+
+      /* ===== ALERT BANNER ===== */
+      .alert-banner {
+        background: linear-gradient(
+          135deg,
+          rgba(231, 76, 60, 0.2),
+          rgba(192, 57, 43, 0.1)
+        );
+        border: 1px solid var(--primary);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      /* ===== FOOTER ===== */
+      .footer {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(12px);
+        padding: 3rem 2rem;
+        text-align: center;
+        border-top: 1px solid rgba(231, 76, 60, 0.2);
+        position: relative;
+        z-index: 2;
+        margin-top: 4rem;
+      }
+
+      .footer-logo {
+        font-size: 1.8rem;
+        font-weight: 200;
+        margin-bottom: 1rem;
+        letter-spacing: 4px;
+      }
+
+      .footer-logo span {
+        color: var(--primary);
+      }
+
+      .footer-text {
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: 0.85rem;
+      }
+
+      /* ===== ANIMATIONS ===== */
+      .fade-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: 0.8s;
+      }
+
+      .fade-up.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .species-header {
+          flex-direction: column;
+          text-align: center;
+        }
+        .section {
+          padding: 1.5rem;
+        }
+        .back-btn {
+          top: 20px;
+          right: 20px;
+          padding: 8px 16px;
+          font-size: 0.8rem;
+        }
+      }
+
+      .extinct-badge {
+        background: rgba(0, 0, 0, 0.6);
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="earthCanvas"></canvas>
+    <div class="overlay"></div>
+
+    <a href="Earth.html" class="back-btn">
+      <i class="fa-solid fa-arrow-right"></i> بازگشت به صفحه اصلی
+    </a>
+
+    <main class="container">
+      <!-- هدر صفحه -->
+      <div class="page-header">
+        <h1 class="page-title">
+          <span>🐾 در آستانه انقراض</span> نجات حیات وحش
+        </h1>
+        <p class="page-subtitle">
+          هر روز حدود ۱۵۰ گونه از کره زمین برای همیشه ناپدید می‌شوند. این
+          گونه‌ها هنوز فرصت نجات دارند.
+        </p>
+      </div>
+
+      <!-- بنر هشدار -->
+      <div class="alert-banner fade-up">
+        <i
+          class="fa-solid fa-skull"
+          style="color: var(--primary); margin-left: 10px"
+        ></i>
+        <strong>وضعیت قرمز:</strong> بیش از ۱ میلیون گونه در معرض خطر انقراض
+        هستند | سرعت انقراض ۱۰۰۰ برابر بیشتر از حالت طبیعی!
+      </div>
+
+      <!-- آمار -->
+      <section class="section fade-up">
+        <h2 class="section-title">📊 آمار تکان‌دهنده</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">۱,۰۰۰,۰۰۰</div>
+            <div class="stat-label">گونه در معرض خطر</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">۱۵۰</div>
+            <div class="stat-label">انقراض در هر روز</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">۴۱٪</div>
+            <div class="stat-label">دوزیستان در خطر</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">۲۶٪</div>
+            <div class="stat-label">پستانداران در خطر</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- گونه‌های در معرض خطر -->
+      <section class="section fade-up">
+        <h2 class="section-title">🦁 گونه‌های در معرض خطر انقراض</h2>
+        <div class="species-grid">
+          <!-- ببر -->
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🐅</div>
+              <div>
+                <div class="species-name">ببر</div>
+                <div class="species-latin">Panthera tigris</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">۳,۹۰۰ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 15%"></div>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">کاهش جمعیت در ۱۰۰ سال</span>
+                <span class="species-stat-value">۹۷٪</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت اصلی</span>
+                <span class="species-stat-value"
+                  >شکار غیرمجاز و تخریب زیستگاه</span
+                >
+              </div>
+              <div class="threat-badge">🔥 در آستانه انقراض - CR</div>
+            </div>
+          </div>
+
+          <!-- پاندا -->
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🐼</div>
+              <div>
+                <div class="species-name">پاندای غول‌پیکر</div>
+                <div class="species-latin">Ailuropoda melanoleuca</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">۱,۸۶۰ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 8%"></div>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">وضعیت</span>
+                <span class="species-stat-value">آسیب‌پذیر (در حال بهبود)</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت اصلی</span>
+                <span class="species-stat-value">کاهش جنگل‌های بامبو</span>
+              </div>
+              <div class="threat-badge">🍃 آسیب‌پذیر - VU</div>
+            </div>
+          </div>
+
+          <!-- فیل آسیایی -->
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🐘</div>
+              <div>
+                <div class="species-name">فیل آسیایی</div>
+                <div class="species-latin">Elephas maximus</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">۴۰,۰۰۰ - ۵۰,۰۰۰ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 25%"></div>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">کاهش جمعیت در ۶۰ سال</span>
+                <span class="species-stat-value">۵۰٪</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت اصلی</span>
+                <span class="species-stat-value">تخریب زیستگاه و شکار عاج</span>
+              </div>
+              <div class="threat-badge">⚠️ در معرض خطر - EN</div>
+            </div>
+          </div>
+
+          <!-- گوریل -->
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🦍</div>
+              <div>
+                <div class="species-name">گوریل کوهستانی</div>
+                <div class="species-latin">Gorilla beringei</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">۱,۰۶۳ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 5%"></div>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">وضعیت</span>
+                <span class="species-stat-value">در حال کاهش</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت اصلی</span>
+                <span class="species-stat-value">شکار، جنگ‌زدایی و بیماری</span>
+              </div>
+              <div class="threat-badge">🔥 بحرانی - CR</div>
+            </div>
+          </div>
+
+          <!-- پلنگ برفی -->
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🐆</div>
+              <div>
+                <div class="species-name">پلنگ برفی</div>
+                <div class="species-latin">Panthera uncia</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">۴,۰۰۰ - ۶,۵۰۰ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 12%"></div>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">کاهش جمعیت</span>
+                <span class="species-stat-value">۲۰٪ در ۲۰ سال</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت اصلی</span>
+                <span class="species-stat-value">تغییرات اقلیمی و شکار</span>
+              </div>
+              <div class="threat-badge">⚠️ در معرض خطر - EN</div>
+            </div>
+          </div>
+
+          <!-- لاک‌پشت چرمی -->
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🐢</div>
+              <div>
+                <div class="species-name">لاک‌پشت چرمی</div>
+                <div class="species-latin">Dermochelys coriacea</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">۲۰,۰۰۰ - ۳۰,۰۰۰ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 10%"></div>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">کاهش جمعیت در ۳۰ سال</span>
+                <span class="species-stat-value">۴۰٪</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت اصلی</span>
+                <span class="species-stat-value">صید تصادفی و تخم‌خوری</span>
+              </div>
+              <div class="threat-badge">🔥 بحرانی - CR</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- گونه‌های منقرض شده -->
+      <section class="section fade-up">
+        <h2 class="section-title">💔 گونه‌هایی که برای همیشه از دست دادیم</h2>
+        <div class="species-grid">
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🕊️</div>
+              <div>
+                <div class="species-name">کبوتر مسافر</div>
+                <div class="species-latin">Ectopistes migratorius</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">سال انقراض</span>
+                <span class="species-stat-value">۱۹۱۴</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت پیشین</span>
+                <span class="species-stat-value">۵ میلیارد</span>
+              </div>
+              <div class="threat-badge extinct-badge">💀 منقرض شده - EX</div>
+            </div>
+          </div>
+
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🦏</div>
+              <div>
+                <div class="species-name">کرگدن سیاه غربی</div>
+                <div class="species-latin">Diceros bicornis longipes</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">سال انقراض</span>
+                <span class="species-stat-value">۲۰۱۱</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت انقراض</span>
+                <span class="species-stat-value">شکار غیرمجاز برای شاخ</span>
+              </div>
+              <div class="threat-badge extinct-badge">💀 منقرض شده - EX</div>
+            </div>
+          </div>
+
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🦜</div>
+              <div>
+                <div class="species-name">طوطی کارولینا</div>
+                <div class="species-latin">Conuropsis carolinensis</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">سال انقراض</span>
+                <span class="species-stat-value">۱۹۱۸</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">علت انقراض</span>
+                <span class="species-stat-value">تخریب زیستگاه و شکار</span>
+              </div>
+              <div class="threat-badge extinct-badge">💀 منقرض شده - EX</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- علل انقراض -->
+      <section class="section fade-up">
+        <h2 class="section-title">⚠️ علل اصلی انقراض گونه‌ها</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">۳۰٪</div>
+            <div class="stat-label">تخریب زیستگاه</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">۲۵٪</div>
+            <div class="stat-label">شکار غیرمجاز</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">۲۰٪</div>
+            <div class="stat-label">تغییرات اقلیمی</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">۱۵٪</div>
+            <div class="stat-label">گونه‌های مهاجم</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">۱۰٪</div>
+            <div class="stat-label">آلودگی</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- حیات وحش ایران -->
+      <section class="section fade-up">
+        <h2 class="section-title">🇮🇷 حیات وحش ایران در خطر</h2>
+        <div class="species-grid">
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🐆</div>
+              <div>
+                <div class="species-name">یوزپلنگ آسیایی</div>
+                <div class="species-latin">Acinonyx jubatus venaticus</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">کمتر از ۲۰ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 2%"></div>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">وضعیت</span>
+                <span class="species-stat-value">در آستانه انقراض کامل</span>
+              </div>
+              <div class="threat-badge">🔥 بحرانی - CR</div>
+            </div>
+          </div>
+
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🦌</div>
+              <div>
+                <div class="species-name">گوزن زرد ایرانی</div>
+                <div class="species-latin">Dama mesopotamica</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت باقی‌مانده</span>
+                <span class="species-stat-value">حدود ۴۰۰ قلاده</span>
+              </div>
+              <div class="population-bar">
+                <div class="population-fill" style="width: 10%"></div>
+              </div>
+              <div class="threat-badge">⚠️ در معرض خطر - EN</div>
+            </div>
+          </div>
+
+          <div class="species-card">
+            <div class="species-header">
+              <div class="species-icon">🦁</div>
+              <div>
+                <div class="species-name">شیر ایرانی</div>
+                <div class="species-latin">Panthera leo persica</div>
+              </div>
+            </div>
+            <div class="species-details">
+              <div class="species-stat">
+                <span class="species-stat-label">وضعیت در ایران</span>
+                <span class="species-stat-value">منقرض شده (دهه ۱۹۴۰)</span>
+              </div>
+              <div class="species-stat">
+                <span class="species-stat-label">جمعیت جهانی</span>
+                <span class="species-stat-value">۶۰۰ قلاده (هند)</span>
+              </div>
+              <div class="threat-badge extinct-badge">
+                💀 منقرض شده در ایران
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- چگونه کمک کنیم -->
+      <section class="section fade-up">
+        <h2 class="section-title">💚 چگونه می‌توانیم کمک کنیم؟</h2>
+        <div class="help-grid">
+          <div class="help-card">
+            <div class="help-icon"><i class="fa-solid fa-tree"></i></div>
+            <div class="help-title">حفاظت از زیستگاه</div>
+            <div class="species-stat-label">
+              حمایت از پارک‌های ملی و مناطق حفاظت شده
+            </div>
+          </div>
+          <div class="help-card">
+            <div class="help-icon"><i class="fa-solid fa-ban"></i></div>
+            <div class="help-title">مقابله با شکار غیرمجاز</div>
+            <div class="species-stat-label">
+              گزارش شکارچیان متخلف به محیط زیست
+            </div>
+          </div>
+          <div class="help-card">
+            <div class="help-icon"><i class="fa-solid fa-recycle"></i></div>
+            <div class="help-title">کاهش آلودگی</div>
+            <div class="species-stat-label">کاهش پلاستیک و بازیافت زباله</div>
+          </div>
+          <div class="help-card">
+            <div class="help-icon"><i class="fa-solid fa-seedling"></i></div>
+            <div class="help-title">کاشت درخت</div>
+            <div class="species-stat-label">احیای جنگل‌ها و مراتع</div>
+          </div>
+          <div class="help-card">
+            <div class="help-icon">
+              <i class="fa-solid fa-hand-holding-heart"></i>
+            </div>
+            <div class="help-title">حمایت مالی</div>
+            <div class="species-stat-label">کمک به سازمان‌های محیط زیستی</div>
+          </div>
+          <div class="help-card">
+            <div class="help-icon"><i class="fa-solid fa-share-alt"></i></div>
+            <div class="help-title">آگاهی‌رسانی</div>
+            <div class="species-stat-label">
+              انتشار اطلاعات درباره گونه‌های در خطر
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-logo"><span>🐾 SAVE</span> WILDLIFE</div>
+      <div class="footer-text">
+        منبع اطلاعات: IUCN Red List | WWF | UNEP-WCMC
+      </div>
+    </footer>
+
+    <script>
+      // ===== کد Three.js برای زمین سه‌بعدی =====
+      (function () {
+        const canvas = document.getElementById("earthCanvas");
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+          45,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({
+          canvas,
+          antialias: true,
+          alpha: true,
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 3, 5);
+        scene.add(directionalLight);
+
+        const backLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+        backLight.position.set(-3, -1, -4);
+        scene.add(backLight);
+
+        const earthGroup = new THREE.Group();
+        scene.add(earthGroup);
+
+        // ستاره‌ها
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsCount = 5000;
+        const starsPositions = new Float32Array(starsCount * 3);
+        for (let i = 0; i < starsCount * 3; i++) {
+          starsPositions[i] = (Math.random() - 0.5) * 1000;
+        }
+        starsGeometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(starsPositions, 3),
+        );
+        const starsMaterial = new THREE.PointsMaterial({
+          color: 0xffffff,
+          size: 0.7,
+          transparent: true,
+          opacity: 0.8,
+        });
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(stars);
+
+        const textureLoader = new THREE.TextureLoader();
+
+        const earthTexture = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+        );
+        const earthBumpMap = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
+        );
+        const earthSpecularMap = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg",
+        );
+        const cloudsTexture = textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_clouds_1024.png",
+        );
+
+        const earthGeometry = new THREE.SphereGeometry(2, 128, 128);
+        const earthMaterial = new THREE.MeshPhongMaterial({
+          map: earthTexture,
+          bumpMap: earthBumpMap,
+          bumpScale: 0.05,
+          specularMap: earthSpecularMap,
+          specular: new THREE.Color(0x333333),
+          shininess: 5,
+        });
+        const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+        earthGroup.add(earthMesh);
+
+        const cloudsGeometry = new THREE.SphereGeometry(2.02, 128, 128);
+        const cloudsMaterial = new THREE.MeshPhongMaterial({
+          map: cloudsTexture,
+          transparent: true,
+          opacity: 0.7,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+        earthGroup.add(cloudsMesh);
+
+        let mouseDown = false;
+        let lastMouseX = 0,
+          lastMouseY = 0;
+        let targetRotationX = 0,
+          targetRotationY = 0;
+        let currentRotationX = 0,
+          currentRotationY = 0;
+        let isRotating = true;
+        let rotationSpeed = 0.5;
+
+        canvas.addEventListener("mousedown", (e) => {
+          mouseDown = true;
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+          if (!mouseDown) return;
+          const deltaX = e.clientX - lastMouseX;
+          const deltaY = e.clientY - lastMouseY;
+          targetRotationY += deltaX * 0.008;
+          targetRotationX += deltaY * 0.008;
+          targetRotationX = Math.max(
+            -Math.PI / 2,
+            Math.min(Math.PI / 2, targetRotationX),
+          );
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+        });
+
+        canvas.addEventListener("mouseup", () => {
+          mouseDown = false;
+        });
+        canvas.addEventListener("mouseleave", () => {
+          mouseDown = false;
+        });
+
+        window.addEventListener("resize", () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function animate() {
+          requestAnimationFrame(animate);
+
+          currentRotationX += (targetRotationX - currentRotationX) * 0.08;
+          currentRotationY += (targetRotationY - currentRotationY) * 0.08;
+
+          if (mouseDown) {
+            earthGroup.rotation.x = currentRotationX;
+            earthGroup.rotation.y = currentRotationY;
+          } else if (isRotating) {
+            earthGroup.rotation.y += 0.002 * rotationSpeed;
+          }
+
+          cloudsMesh.rotation.y += 0.0025 * rotationSpeed * 1.1;
+          stars.rotation.y += 0.0002;
+
+          renderer.render(scene, camera);
+        }
+
+        animate();
+      })();
+
+      // انیمیشن اسکرول
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("active");
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      document
+        .querySelectorAll(
+          ".fade-up, .section, .stat-card, .species-card, .help-card, .category-card",
+        )
+        .forEach((el) => {
+          observer.observe(el);
+        });
+    </script>
+  </body>
+</html>
